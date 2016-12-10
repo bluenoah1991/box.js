@@ -1,0 +1,65 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Test</title>
+    <style>
+        *{margin: 0; padding: 0;}
+        body{padding: 50px;}
+        #canvas{border: #000 solid 1px;}
+    </style>
+    <script src="./assets/hidpi-canvas.min.js"></script>
+    <script src="./assets/canvas.js"></script>
+</head>
+<body>
+    <canvas width='300' height='300' id="canvas"></canvas>
+    <script src="./bundle.js"></script>
+    <script>
+        // Drawing your graph
+        var scene = new Scene('canvas');
+
+        // Drawing a rect
+        var box1 = new Box(50, 50, function(ctx){
+            ctx.setFillStyle('blue');
+            ctx.fillRect(10, 10, 30, 30);
+        });
+
+        var box2 = new Box(60, 60, function(ctx){
+            ctx.setFillStyle('green');
+            ctx.fillRect(10, 10, 40, 40);
+        });
+
+        scene.addBox(box1, 0, 0, 5);
+        scene.addBox(box2, 0, 0, 1);
+
+        var isDragging = false;
+        var selectedBox = null;
+
+        scene.onMouseUp = function(e, box){
+            isDragging = false;
+            selectedBox = null;
+        }
+
+        scene.onMouseOut = function(e, x, y){
+            isDragging = false;
+            selectedBox = null;
+        }
+
+        scene.onMouseDown = function(e, box){
+            isDragging = true;
+            selectedBox = box;
+        }
+
+        scene.onMouseMove = function(e, x, y){
+            if(isDragging){
+                if(selectedBox != undefined){
+                    selectedBox.setPosition(
+                        x - parseInt(selectedBox.width / 2), 
+                        y - parseInt(selectedBox.height / 2))
+                    scene.render();
+                }
+            }
+        }
+        
+    </script>
+</body>
+</html>
