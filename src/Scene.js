@@ -9,6 +9,7 @@ export default class Scene{
         this.ctx = this.canvas.getContext('2d');
         this.layers = [];
         this.reverseLayers = [];
+        this.selected = null;
 
         this.canvas.onmouseup = this._onMouseUp.bind(this);
         this.canvas.onmousedown = this._onMouseDown.bind(this);
@@ -70,6 +71,18 @@ export default class Scene{
         let x = e.pageX - this.canvas.offsetLeft;
         let y = e.pageY - this.canvas.offsetTop;
         this.onMouseMove(e, x, y);
+        let selected = this._onSelected(e);
+        if(selected != undefined){
+            if(this.selected == undefined || this.selected.handle != selected.handle){
+                this.selected = selected;
+                this.onTouch(e, selected);
+            }
+        } else {
+            if(this.selected != undefined){
+                this.selected = selected;
+                this.onTouch(e, selected);
+            }
+        }
     }
 
     _onMouseOver(e){
@@ -127,6 +140,10 @@ export default class Scene{
     }
 
     onMouseOut(e, x, y){
+        // override it
+    }
+
+    onTouch(e, box){
         // override it
     }
 

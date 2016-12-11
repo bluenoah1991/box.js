@@ -59,6 +59,14 @@
                 }
             }
         }
+
+        scene.onTouch = function(e, box){
+            if(box != undefined){
+                console.log('Touch box ' + box.handle);
+            } else {
+                console.log('Leave box');
+            }
+        }
         
     </script>
 </body>
