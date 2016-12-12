@@ -1,16 +1,26 @@
 export default class Box{
-    constructor(width, height, render){
-        this.width = width;
-        this.height = height;
+    constructor(render){
         this.render = render;
         this.mount = false;
+        this.scene = null;
+        this.paths = [];
+    }
+
+    _include(x, y){
+        if(this.mount){
+            for(var i in this.paths){
+                let [include, path] = this.paths[i];
+                if(this.scene.ctx.isPointInPath(path, x, y)){
+                    return include;
+                }
+            }
+        } else {
+            return false;
+        }
     }
 
     setPosition(x, y){
         this.x = x;
         this.y = y;
-        let path = new Path2D();
-        path.rect(x, y, this.width, this.height);
-        this.path = path;
     }
 }

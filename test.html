@@ -7,25 +7,26 @@
         body{padding: 50px;}
         #canvas{border: #000 solid 1px;}
     </style>
-    <script src="./assets/hidpi-canvas.min.js"></script>
-    <script src="./assets/canvas.js"></script>
+    <script type="text/javascript" src="./assets/hidpi-canvas.min.js"></script>
+    <script type="text/javascript" src="./assets/canvas.js"></script>
 </head>
 <body>
     <canvas width='300' height='300' id="canvas"></canvas>
-    <script src="./bundle.js"></script>
-    <script>
+    <script type="text/javascript" src="./bundle.js"></script>
+    <script type="text/javascript">
         // Drawing your graph
         var scene = new Scene('canvas');
 
         // Drawing a rect
-        var box1 = new Box(50, 50, function(ctx){
+        var box1 = new Box(function(ctx){
             ctx.setFillStyle('blue');
             ctx.fillRect(10, 10, 30, 30);
         });
 
-        var box2 = new Box(60, 60, function(ctx){
+        var box2 = new Box(function(ctx){
             ctx.setFillStyle('green');
-            ctx.fillRect(10, 10, 40, 40);
+            ctx.fillRect(20, 20, 60, 60);
+            ctx.clearRect(30, 30, 40, 40);
         });
 
         scene.addBox(box1, 0, 0, 5);
@@ -33,8 +34,10 @@
 
         var isDragging = false;
         var selectedBox = null;
+        var offsetX = 0;
+        var offsetY = 0;
 
-        scene.onMouseUp = function(e, box){
+        scene.onMouseUp = function(e, x, y, box){
             isDragging = false;
             selectedBox = null;
         }
@@ -44,23 +47,25 @@
             selectedBox = null;
         }
 
-        scene.onMouseDown = function(e, box){
+        scene.onMouseDown = function(e, x, y, box){
             isDragging = true;
             selectedBox = box;
+            if(selectedBox != undefined){
+                offsetX = x - box.x;
+                offsetY = y - box.y;
+            }
         }
 
         scene.onMouseMove = function(e, x, y){
             if(isDragging){
                 if(selectedBox != undefined){
-                    selectedBox.setPosition(
-                        x - parseInt(selectedBox.width / 2), 
-                        y - parseInt(selectedBox.height / 2))
+                    selectedBox.setPosition(x - offsetX, y - offsetY);
                     scene.render();
                 }
             }
         }
 
-        scene.onTouch = function(e, box){
+        scene.onTouch = function(e, x, y, box){
             if(box != undefined){
                 console.log('Touch box ' + box.handle);
             } else {

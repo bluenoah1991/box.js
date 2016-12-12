@@ -35,17 +35,16 @@ export default class Scene{
     _renderOne(box){
         let ctx = new Context(this.ctx, box.x, box.y);
         box.render(ctx);
+        box.paths = ctx._getPaths();
     }
 
-    _onSelected(e){
-        let x = e.pageX - this.canvas.offsetLeft;
-        let y = e.pageY - this.canvas.offsetTop;
+    _onSelected(x, y){
         let selected = null;
         for(var i in this.reverseLayers){
             let layer = this.reverseLayers[i];
             for(var handle in layer){
                 let box = layer[handle];
-                if(this.ctx.isPointInPath(box.path, x, y)){
+                if(box._include(x, y)){
                     selected = box;
                     break;
                 }
@@ -58,29 +57,33 @@ export default class Scene{
     }
 
     _onMouseUp(e){
-        let selected = this._onSelected(e);
-        this.onMouseUp(e, selected);
+        let x = e.pageX - this.canvas.offsetLeft;
+        let y = e.pageY - this.canvas.offsetTop;
+        let selected = this._onSelected(x, y);
+        this.onMouseUp(e, x, y, selected);
     }
 
     _onMouseDown(e){
-        let selected = this._onSelected(e);
-        this.onMouseDown(e, selected);
+        let x = e.pageX - this.canvas.offsetLeft;
+        let y = e.pageY - this.canvas.offsetTop;
+        let selected = this._onSelected(x, y);
+        this.onMouseDown(e, x, y, selected);
     }
 
     _onMouseMove(e){
         let x = e.pageX - this.canvas.offsetLeft;
         let y = e.pageY - this.canvas.offsetTop;
         this.onMouseMove(e, x, y);
-        let selected = this._onSelected(e);
+        let selected = this._onSelected(x, y);
         if(selected != undefined){
             if(this.selected == undefined || this.selected.handle != selected.handle){
                 this.selected = selected;
-                this.onTouch(e, selected);
+                this.onTouch(e, x, y, selected);
             }
         } else {
             if(this.selected != undefined){
                 this.selected = selected;
-                this.onTouch(e, selected);
+                this.onTouch(e, x, y, selected);
             }
         }
     }
@@ -101,9 +104,10 @@ export default class Scene{
         let handle = box.handle = uuid.v1();
         box.setPosition(x, y);
         box.z = z || 0;
-        box.mount = true;
         this._addToLayer(box);
         this.render();
+        box.scene = this;
+        box.mount = true;
         return handle;
     }
 
@@ -123,11 +127,11 @@ export default class Scene{
 
     // events
 
-    onMouseUp(e, box){
+    onMouseUp(e, x, y, box){
         // override it
     }
 
-    onMouseDown(e, box){
+    onMouseDown(e, x, y, box){
         // override it
     }
 
@@ -143,7 +147,7 @@ export default class Scene{
         // override it
     }
 
-    onTouch(e, box){
+    onTouch(e, x, y, box){
         // override it
     }
 
