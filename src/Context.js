@@ -1,3 +1,5 @@
+import Path from './Path';
+
 export default class Context {
     constructor(ctx, x, y){
         this.ctx = ctx;
@@ -8,6 +10,10 @@ export default class Context {
 
     _getPaths(){
         return this.paths.reverse();
+    }
+
+    createPath(){
+        return new Path(this);
     }
 
     // Drawing rectangles
@@ -170,11 +176,11 @@ export default class Context {
     // Gradients and patterns
 
     createLinearGradient(x0, y0, x1, y1){
-        this.ctx.createLinearGradient(x0, y0, x1, y1);
+        this.ctx.createLinearGradient(this.x + x0, this.y + y0, this.x + x1, this.y + y1);
     }
 
     createRadialGradient(x0, y0, r0, x1, y1, r1){
-        this.ctx.createRadialGradient(x0, y0, r0, x1, y1, r1);
+        this.ctx.createRadialGradient(this.x + x0, this.y + y0, r0, this.x + x1, this.y + y1, r1);
     }
 
     createPattern(image, repetition){
@@ -230,11 +236,13 @@ export default class Context {
     // Drawing paths
 
     fill(path, fillRule){
+        path = path.nativePath;
         this.ctx.fill(path, fillRule);
         this.paths.push([true, path]);
     }
 
     stroke(path){
+        path = path.nativePath;
         this.ctx.stroke(path);
         this.paths.push([true, path]);
     }
@@ -244,6 +252,7 @@ export default class Context {
     }
 
     scrollPathIntoView(path){
+        path = path.nativePath;
         this.ctx.scrollPathIntoView(path);
     }
 
@@ -252,11 +261,13 @@ export default class Context {
     }
 
     isPointInPath(path, x, y, fillRule){
-        this.ctx.isPointInPath(path, x, y, fillRule);
+        path = path.nativePath;
+        this.ctx.isPointInPath(path, this.x + x, this.y + y, fillRule);
     }
 
     isPointInStroke(path, x, y){
-        this.ctx.isPointInStroke(path, x, y);
+        path = path.nativePath;
+        this.ctx.isPointInStroke(path, this.x + x, this.y + y);
     }
 
 }

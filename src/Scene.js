@@ -10,13 +10,26 @@ export default class Scene{
         this.layers = [];
         this.reverseLayers = [];
         this.selected = null;
+        this.elementContainer = this._initElementContainer();
+        this.elements = {};
 
         this.canvas.onmouseup = this._onMouseUp.bind(this);
         this.canvas.onmousedown = this._onMouseDown.bind(this);
         this.canvas.onmousemove = this._onMouseMove.bind(this);
-
         this.canvas.onmouseover = this._onMouseOver.bind(this);
         this.canvas.onmouseout = this._onMouseOut.bind(this);
+
+        this.elementContainer.on('mouseup', '*', this._onContainerMouseUp.bind(this));
+        this.elementContainer.on('mousedown', '*', this._onContainerMouseDown.bind(this));
+        this.elementContainer.on('mousemove', '*', this._onMouseMove.bind(this));
+        this.elementContainer.on('mouseover', '*', this._onContainerMouseOver.bind(this));
+        this.elementContainer.on('mouseout', '*', this._onContainerMouseOut.bind(this));
+    }
+
+    _initElementContainer(){
+        let container = $('<div />');
+        $('body').append(container);
+        return container;
     }
 
     _addToLayer(box){
@@ -30,6 +43,15 @@ export default class Scene{
         for(var i in this.layers){
             this.reverseLayers.unshift(this.layers[i]);
         }
+    }
+
+    _addToDom(box){
+        this.elements[box.handle] = box;
+        box.element.attr('handle', box.handle);
+        box.element.css('position', 'absolute');
+        box.element.css('left', box.x + this.canvas.offsetLeft);
+        box.element.css('top', box.y + this.canvas.offsetTop);
+        this.elementContainer.append(box.element);
     }
 
     _renderOne(box){
@@ -56,21 +78,32 @@ export default class Scene{
         return selected;
     }
 
+    // Canvas Events
+
     _onMouseUp(e){
+        e.preventDefault();
         let x = e.pageX - this.canvas.offsetLeft;
         let y = e.pageY - this.canvas.offsetTop;
         let selected = this._onSelected(x, y);
+        if(selected != undefined){
+            selected.onMouseUp(e, x, y);
+        }
         this.onMouseUp(e, x, y, selected);
     }
 
     _onMouseDown(e){
+        e.preventDefault();
         let x = e.pageX - this.canvas.offsetLeft;
         let y = e.pageY - this.canvas.offsetTop;
         let selected = this._onSelected(x, y);
+        if(selected != undefined){
+            selected.onMouseDown(e, x, y);
+        }
         this.onMouseDown(e, x, y, selected);
     }
 
     _onMouseMove(e){
+        e.preventDefault();
         let x = e.pageX - this.canvas.offsetLeft;
         let y = e.pageY - this.canvas.offsetTop;
         this.onMouseMove(e, x, y);
@@ -79,33 +112,111 @@ export default class Scene{
             if(this.selected == undefined || this.selected.handle != selected.handle){
                 this.selected = selected;
                 this.onTouch(e, x, y, selected);
+                selected.onMouseOver(e, x, y);
             }
         } else {
             if(this.selected != undefined){
+                let originalSelected = this.selected;
                 this.selected = selected;
                 this.onTouch(e, x, y, selected);
+                originalSelected.onMouseOut(e, x, y);
             }
         }
     }
 
     _onMouseOver(e){
+        e.preventDefault();
+        let from = $(e.fromElement);
+        if(from.attr('handle') in this.elements){
+            return;
+        }
         let x = e.pageX - this.canvas.offsetLeft;
         let y = e.pageY - this.canvas.offsetTop;
         this.onMouseOver(e, x, y);
     }
 
     _onMouseOut(e){
+        e.preventDefault();
+        let to = $(e.toElement);
+        if(to.attr('handle') in this.elements){
+            return;
+        }
         let x = e.pageX - this.canvas.offsetLeft;
         let y = e.pageY - this.canvas.offsetTop;
         this.onMouseOut(e, x, y);
     }
 
+    // Elements Container Events
+
+    _onContainerMouseUp(e){
+        // http://stackoverflow.com/questions/13236484/mouseup-not-working-after-mousemove-on-img
+        e.preventDefault();
+        let element = $(e.target);
+        if(element.attr('handle') != undefined){
+            let box = this.elements[element.attr('handle')];
+            if(box != undefined){
+                let x = e.pageX - this.canvas.offsetLeft;
+                let y = e.pageY - this.canvas.offsetTop;
+                this.onMouseUp(e, x, y, box);
+                box.onMouseUp(e, x, y);
+            }
+        }
+    }
+
+    _onContainerMouseDown(e){
+        e.preventDefault();
+        let element = $(e.target);
+        if(element.attr('handle') != undefined){
+            let box = this.elements[element.attr('handle')];
+            if(box != undefined){
+                let x = e.pageX - this.canvas.offsetLeft;
+                let y = e.pageY - this.canvas.offsetTop;
+                this.onMouseDown(e, x, y, box);
+                box.onMouseDown(e, x, y);
+            }
+        }
+    }
+
+    _onContainerMouseOver(e){
+        e.preventDefault();
+        let element = $(e.target);
+        if(element.attr('handle') != undefined){
+            let box = this.elements[element.attr('handle')];
+            if(box != undefined){
+                let x = e.pageX - this.canvas.offsetLeft;
+                let y = e.pageY - this.canvas.offsetTop;
+                this.onTouch(e, x, y, box);
+                box.onMouseOver(e, x, y);
+            }
+        }
+    }
+
+    _onContainerMouseOut(e){
+        e.preventDefault();
+        let element = $(e.target);
+        if(element.attr('handle') != undefined){
+            let box = this.elements[element.attr('handle')];
+            if(box != undefined){
+                let x = e.pageX - this.canvas.offsetLeft;
+                let y = e.pageY - this.canvas.offsetTop;
+                this.onTouch(e, x, y, null);
+                box.onMouseOut(e, x, y);
+            }
+        }
+    }
+
+    // Public Methods
+
     addBox(box, x, y, z){
         let handle = box.handle = uuid.v1();
         box.setPosition(x, y);
         box.z = z || 0;
-        this._addToLayer(box);
-        this.render();
+        if(box.isElement){
+            this._addToDom(box);
+        } else {
+            this._addToLayer(box);
+            this.render();
+        }
         box.scene = this;
         box.mount = true;
         return handle;
