@@ -80,7 +80,7 @@ export default class Scene{
         box.element.attr('handle', box.handle);
         box.element.css('pointer-events', 'auto');
         box.element.css('display', 'inline-block');
-        box.element.css('position', 'relative');
+        box.element.css('position', 'absolute');
         box.element.css('left', box.x);
         box.element.css('top', box.y);
         this.elementContainer.append(box.element);
