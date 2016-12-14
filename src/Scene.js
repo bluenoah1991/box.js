@@ -4,7 +4,7 @@ import uuid from 'node-uuid';
 import Context from './Context';
 
 export default class Scene{
-    constructor(id){
+    constructor(id, opts){
         this.canvas = document.getElementById(id);
         this.ctx = this.canvas.getContext('2d');
         this.layers = [];
@@ -13,6 +13,21 @@ export default class Scene{
         this.elementContainer = this._initElementContainer();
         this.elements = {};
 
+        // Options
+        this.opts = opts || {};
+        this.infinity = this.opts.infinity || false;
+
+
+        // Parameters associated with Infinite Canvas
+        this.offsetX = 0;
+        this.offsetY = 0;
+
+        // Parameters associated with Mousedown
+        this.mousedown = false;
+        this.originX = -1;
+        this.originY = -1;
+
+        // Register Event
         this.canvas.onmouseup = this._onMouseUp.bind(this);
         this.canvas.onmousedown = this._onMouseDown.bind(this);
         this.canvas.onmousemove = this._onMouseMove.bind(this);
@@ -27,7 +42,22 @@ export default class Scene{
     }
 
     _initElementContainer(){
+        let canvas = $(this.canvas);
+        let border_top_width = parseInt(canvas.css('border-top-width'));
+        let border_right_width = parseInt(canvas.css('border-right-width'));
+        let border_bottom_width = parseInt(canvas.css('border-bottom-width'));
+        let border_left_width = parseInt(canvas.css('border-left-width'));
         let container = $('<div />');
+        container.css({
+            display: 'inline-block',
+            overflow: 'hidden',
+            width: canvas.width() - border_left_width - border_right_width,
+            height: canvas.height() - border_top_width - border_bottom_width,
+            position: 'absolute',
+            left: this.canvas.offsetLeft + border_left_width,
+            top: this.canvas.offsetTop + border_top_width,
+            pointerEvents: 'none'
+        });
         $('body').append(container);
         return container;
     }
@@ -48,16 +78,22 @@ export default class Scene{
     _addToDom(box){
         this.elements[box.handle] = box;
         box.element.attr('handle', box.handle);
-        box.element.css('position', 'absolute');
-        box.element.css('left', box.x + this.canvas.offsetLeft);
-        box.element.css('top', box.y + this.canvas.offsetTop);
+        box.element.css('pointer-events', 'auto');
+        box.element.css('position', 'relative');
+        box.element.css('left', box.x);
+        box.element.css('top', box.y);
         this.elementContainer.append(box.element);
     }
 
     _renderOne(box){
-        let ctx = new Context(this.ctx, box.x, box.y);
-        box.render(ctx);
-        box.paths = ctx._getPaths();
+        if(box.isElement){
+            box.element.css('left', box.x + this.offsetX);
+            box.element.css('top', box.y + this.offsetY);
+        } else {
+            let ctx = new Context(this.ctx, box.x + this.offsetX, box.y + this.offsetY);
+            box.render(ctx);
+            box.paths = ctx._getPaths();
+        }
     }
 
     _onSelected(x, y){
@@ -78,12 +114,27 @@ export default class Scene{
         return selected;
     }
 
+    // Methods associated with Mousedown
+
+    _MouseDown(x, y){
+        this.mousedown = true;
+        this.originX = x;
+        this.originY = y;
+    }
+
+    _MouseUp(){
+        this.mousedown = false;
+        this.originX = -1;
+        this.originY = -1;
+    }
+
     // Canvas Events
 
     _onMouseUp(e){
         e.preventDefault();
         let x = e.pageX - this.canvas.offsetLeft;
         let y = e.pageY - this.canvas.offsetTop;
+        this._MouseUp();
         let selected = this._onSelected(x, y);
         if(selected != undefined){
             selected.onMouseUp(e, x, y);
@@ -95,6 +146,7 @@ export default class Scene{
         e.preventDefault();
         let x = e.pageX - this.canvas.offsetLeft;
         let y = e.pageY - this.canvas.offsetTop;
+        this._MouseDown(x, y);
         let selected = this._onSelected(x, y);
         if(selected != undefined){
             selected.onMouseDown(e, x, y);
@@ -121,6 +173,13 @@ export default class Scene{
                 this.onTouch(e, x, y, selected);
                 originalSelected.onMouseOut(e, x, y);
             }
+            if(this.infinity && this.mousedown){
+                this.offsetX += x - this.originX;
+                this.offsetY += y - this.originY;
+                this.originX = x;
+                this.originY = y;
+                this.render();
+            }
         }
     }
 
@@ -143,6 +202,7 @@ export default class Scene{
         }
         let x = e.pageX - this.canvas.offsetLeft;
         let y = e.pageY - this.canvas.offsetTop;
+        this._MouseUp();
         this.onMouseOut(e, x, y);
     }
 
@@ -187,6 +247,10 @@ export default class Scene{
                 let y = e.pageY - this.canvas.offsetTop;
                 this.onTouch(e, x, y, box);
                 box.onMouseOver(e, x, y);
+                if(x > 0 && x < this.canvas.width &&
+                    y > 0 && y < this.canvas.height){
+                        this.onMouseOver(e, x, y);
+                    }
             }
         }
     }
@@ -201,6 +265,11 @@ export default class Scene{
                 let y = e.pageY - this.canvas.offsetTop;
                 this.onTouch(e, x, y, null);
                 box.onMouseOut(e, x, y);
+                if(x < 0 || x > this.canvas.width ||
+                    y < 0 || y > this.canvas.height){
+                        this._MouseUp();
+                        this.onMouseOut(e, x, y);
+                    }
             }
         }
     }
@@ -230,6 +299,9 @@ export default class Scene{
                 this._renderOne(box);
             }.bind(this));
         }
+        _.forEach(this.elements, function(element){
+            this._renderOne(element);
+        }.bind(this));
     }
 
     clear(){

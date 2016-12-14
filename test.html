@@ -20,8 +20,9 @@
         var ctx = canvas.getContext('2d');
 
         // Drawing your graph
-        var scene = new Scene('canvas');
-        window.currentScene = scene;
+        var scene = new Scene('canvas', {
+            infinity: true
+        });
 
         // Drawing a rect
         var box1 = new Box(function(ctx){
@@ -49,10 +50,18 @@
             height: '100'
         }));
 
+        var box5 = new Box(function(ctx){
+            var path = ctx.createPath();
+            path.moveTo(0, 0);
+            path.lineTo(100, 100);
+            ctx.stroke(path);
+        });
+
         scene.addBox(box1, 0, 0, 5);
-        scene.addBox(box2, 0, 0, 1);
-        scene.addBox(box3, 10, 0, 2);
-        scene.addBox(box4, 0, 0);
+        scene.addBox(box2, 40, 180, 1);
+        scene.addBox(box3, 0, 20, 2);
+        scene.addBox(box4, 180, 120);
+        scene.addBox(box5, 120, 0);
 
         box1.onMouseUp = function(){
             // console.log('Mouse up ' + box1.handle);
@@ -67,7 +76,7 @@
         }
 
         box1.onMouseOut = function(){
-            console.log('Mouse out ' + box1.handle);
+            // console.log('Mouse out ' + box1.handle);
         }
 
         var isDragging = false;
@@ -95,7 +104,7 @@
         }
 
         scene.onMouseMove = function(e, x, y){
-            console.log('Move to x = ' + x + ' and y = ' + y);
+            // console.log('Move to x = ' + x + ' and y = ' + y);
             if(isDragging){
                 if(selectedBox != undefined){
                     selectedBox.setPosition(x - offsetX, y - offsetY);
