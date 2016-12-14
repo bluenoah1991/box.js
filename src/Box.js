@@ -12,9 +12,16 @@ export default class Box{
         this.mount = false;
         this.scene = null;
         this.paths = [];
+        this.x = 0;
+        this.y = 0;
+        this.z = 0;
+        this.show_ = true;
     }
 
     _include(x, y){
+        if(!this.show_){
+            return false;
+        }
         if(this.mount){
             for(var i in this.paths){
                 let [include, path] = this.paths[i];
@@ -27,9 +34,30 @@ export default class Box{
         }
     }
 
-    setPosition(x, y){
+    _removePosition(){
+        this.x = 0;
+        this.y = 0;
+        this.z = 0;
+    }
+
+    setPosition(x, y, z = 0){
         this.x = x;
         this.y = y;
+        this.z = z;
+    }
+
+    show(){
+        this.show_ = true;
+        if(this.mount){
+            this.scene.render();
+        }
+    }
+
+    hide(){
+        this.show_ = false;
+        if(this.mount){
+            this.scene.render();
+        }
     }
 
     // events

@@ -7,6 +7,7 @@ export default class Scene{
     constructor(id, opts){
         this.canvas = document.getElementById(id);
         this.ctx = this.canvas.getContext('2d');
+        this.boxs = {};
         this.layers = [];
         this.reverseLayers = [];
         this.selected = null;
@@ -86,11 +87,28 @@ export default class Scene{
         this.elementContainer.append(box.element);
     }
 
+    _removeFromLayer(box){
+        let layer = this.layers[box.z];
+        if(layer != undefined){
+            delete layer[box.handle];
+        }
+    }
+
+    _removeFromDom(box){
+        box.element.remove();
+        delete this.elements[box.handle];
+    }
+
     _renderOne(box){
         if(box.isElement){
-            box.element.css('left', box.x + this.offsetX);
-            box.element.css('top', box.y + this.offsetY);
-        } else {
+            if(box.show_){
+                box.element.css('display', 'inline-block');
+                box.element.css('left', box.x + this.offsetX);
+                box.element.css('top', box.y + this.offsetY);
+            } else {
+                box.element.css('display', 'none');
+            }
+        } else if(box.show_) {
             let ctx = new Context(this.ctx, box.x + this.offsetX, box.y + this.offsetY);
             box.render(ctx);
             box.paths = ctx._getPaths();
@@ -279,8 +297,8 @@ export default class Scene{
 
     addBox(box, x, y, z){
         let handle = box.handle = uuid.v1();
-        box.setPosition(x, y);
-        box.z = z || 0;
+        this.boxs[handle] = box;
+        box.setPosition(x, y, z);
         if(box.isElement){
             this._addToDom(box);
         } else {
@@ -290,6 +308,25 @@ export default class Scene{
         box.scene = this;
         box.mount = true;
         return handle;
+    }
+
+    removeBox(handle){
+        let box = this.boxs[handle];
+        if(box != undefined){
+            if(box.isElement){
+                this._removeFromDom(box);
+            } else {
+                this._removeFromLayer(box);
+                this.render();
+            }
+            delete this.boxs[handle];
+            box._removePosition();
+            box.scene = null;
+            box.mount = false;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     render(){

@@ -79,6 +79,17 @@
             // console.log('Mouse out ' + box1.handle);
         }
 
+        box3.onMouseDown = function(){
+            box3.hide();
+            setTimeout(function(){
+                box3.show();
+            }, 2000);
+        }
+
+        box4.onMouseDown = function(){
+            scene.removeBox(box4.handle);
+        }
+
         var isDragging = false;
         var selectedBox = null;
         var offsetX = 0;
