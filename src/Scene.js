@@ -79,6 +79,7 @@ export default class Scene{
         this.elements[box.handle] = box;
         box.element.attr('handle', box.handle);
         box.element.css('pointer-events', 'auto');
+        box.element.css('display', 'inline-block');
         box.element.css('position', 'relative');
         box.element.css('left', box.x);
         box.element.css('top', box.y);
