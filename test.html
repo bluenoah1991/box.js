@@ -5,14 +5,14 @@
     <style>
         *{margin: 0; padding: 0;}
         body{padding: 50px;}
-        #canvas{border: #000 solid 1px;}
+        #canvas{border: #000 solid 1px; width: 300px; height: 300px;}
     </style>
-    <script type="text/javascript" src="./assets/hidpi-canvas.min.js"></script>
+    <!--<script type="text/javascript" src="./assets/hidpi-canvas.min.js"></script>-->
     <script type="text/javascript" src="./assets/canvas.js"></script>
     <script type="text/javascript" src="./assets/zepto.min.js"></script>
 </head>
 <body>
-    <canvas width='300' height='300' id="canvas"></canvas>
+    <canvas width='600' height='600' id="canvas"></canvas>
     <script type="text/javascript" src="./bundle.js"></script>
     <script type="text/javascript">
         // test
@@ -21,7 +21,9 @@
 
         // Drawing your graph
         var scene = new Scene('canvas', {
-            infinity: true
+            infinity: true,
+            scaleX: 2,
+            scaleY: 2
         });
 
         // Drawing a rect
@@ -79,14 +81,15 @@
             // console.log('Mouse out ' + box1.handle);
         }
 
-        box3.onMouseDown = function(){
+        box3.onTouchStart = box3.onMouseDown = function(){
             box3.hide();
             setTimeout(function(){
                 box3.show();
             }, 2000);
+            console.log('Mouse down box3');
         }
 
-        box4.onMouseDown = function(){
+        box4.onTouchStart = box4.onMouseDown = function(){
             scene.removeBox(box4.handle);
         }
 
@@ -95,7 +98,7 @@
         var offsetX = 0;
         var offsetY = 0;
 
-        scene.onMouseUp = function(e, x, y, box){
+        scene.onTouchEnd = scene.onMouseUp = function(e, x, y, box){
             isDragging = false;
             selectedBox = null;
         }
@@ -105,7 +108,10 @@
             selectedBox = null;
         }
 
-        scene.onMouseDown = function(e, x, y, box){
+        scene.onTouchStart = scene.onMouseDown = function(e, x, y, box){
+            if(box != undefined && box.handle == box3.handle){
+                return;
+            }
             isDragging = true;
             selectedBox = box;
             if(selectedBox != undefined){
@@ -114,7 +120,7 @@
             }
         }
 
-        scene.onMouseMove = function(e, x, y){
+        scene.onTouchMove = scene.onMouseMove = function(e, x, y){
             // console.log('Move to x = ' + x + ' and y = ' + y);
             if(isDragging){
                 if(selectedBox != undefined){

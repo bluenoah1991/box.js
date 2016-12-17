@@ -16,6 +16,10 @@ export default class Context {
         return new Path(this);
     }
 
+    scale(x, y){
+        this.ctx.scale(x, y);
+    }
+
     // Drawing rectangles
 
     clearRect(x, y, width, height){

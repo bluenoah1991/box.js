@@ -78,4 +78,22 @@ export default class Box{
         // override it
     }
 
+    // touch events
+
+    onTouchStart(e, x, y){
+        // override it
+    }
+
+    onTouchEnd(e, x, y){
+        // override it
+    }
+
+    onTouchEnter(e, x, y){
+        // override it
+    }
+
+    onTouchLeave(e, x, y){
+        // override it
+    }
+
 }
