@@ -460,6 +460,13 @@ export default class Scene{
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
+    close(){
+        _.forEach(this.boxs, function(box, handle){
+            this.removeBox(handle);
+        }.bind(this));
+        this.clear();
+    }
+
     // events
 
     onMouseUp(e, x, y, box){

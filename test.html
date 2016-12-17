@@ -59,11 +59,23 @@
             ctx.stroke(path);
         });
 
+        var box6_ele = $('<input />', {
+            type: 'button',
+            value: 'Close',
+            width: '100',
+            height: '60'
+        });
+        box6_ele.on('click', function(){
+            scene.close();
+        });
+        var box6 = new Box(box6_ele);
+
         scene.addBox(box1, 0, 0, 5);
         scene.addBox(box2, 40, 180, 1);
         scene.addBox(box3, 0, 20, 2);
         scene.addBox(box4, 180, 120);
         scene.addBox(box5, 120, 0);
+        scene.addBox(box6, 150, 150);
 
         box1.onMouseUp = function(){
             // console.log('Mouse up ' + box1.handle);
