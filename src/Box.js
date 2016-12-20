@@ -92,7 +92,7 @@ export default class Box{
             if(this.mount){
                 zoom = this.scene.zoom;
             }
-            return this.element.css('margin-top') / this.scene.zoom;
+            return parseInt(this.element.css('margin-top')) / this.scene.zoom;
         } else {
             return -1;
         }
@@ -104,7 +104,7 @@ export default class Box{
             if(this.mount){
                 zoom = this.scene.zoom;
             }
-            return this.element.css('margin-right') / this.scene.zoom;
+            return parseInt(this.element.css('margin-right')) / this.scene.zoom;
         } else {
             return -1;
         }
@@ -116,7 +116,7 @@ export default class Box{
             if(this.mount){
                 zoom = this.scene.zoom;
             }
-            return this.element.css('margin-bottom') / this.scene.zoom;
+            return parseInt(this.element.css('margin-bottom')) / this.scene.zoom;
         } else {
             return -1;
         }
@@ -128,7 +128,7 @@ export default class Box{
             if(this.mount){
                 zoom = this.scene.zoom;
             }
-            return this.element.css('margin-left') / this.scene.zoom;
+            return parseInt(this.element.css('margin-left')) / this.scene.zoom;
         } else {
             return -1;
         }
