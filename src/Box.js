@@ -60,6 +60,32 @@ export default class Box{
         }
     }
 
+    // if isElement = true
+
+    elementWidth(){
+        if(this.isElement){
+            let zoom = 1;
+            if(this.mount){
+                zoom = this.scene.zoom;
+            }
+            return this.element.width() / this.scene.zoom;
+        } else {
+            return -1;
+        }
+    }
+
+    elementHeight(){
+        if(this.isElement){
+            let zoom = 1;
+            if(this.mount){
+                zoom = this.scene.zoom;
+            }
+            return this.element.height() / this.scene.zoom;
+        } else {
+            return -1;
+        }
+    }
+
     // events
 
     onMouseUp(e, x, y){
