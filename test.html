@@ -5,14 +5,14 @@
     <style>
         *{margin: 0; padding: 0;}
         body{padding: 50px;}
-        #canvas{border: #000 solid 1px; width: 300px; height: 300px;}
+        #canvas{border: #000 solid 1px; width: 600px; height: 600px;}
     </style>
     <!--<script type="text/javascript" src="./assets/hidpi-canvas.min.js"></script>-->
     <script type="text/javascript" src="./assets/canvas.js"></script>
     <script type="text/javascript" src="./assets/zepto.min.js"></script>
 </head>
 <body>
-    <canvas width='300' height='300' id="canvas"></canvas>
+    <canvas width='600' height='600' id="canvas"></canvas>
     <script type="text/javascript" src="./bundle.js"></script>
     <script type="text/javascript">
         // test
@@ -23,7 +23,8 @@
         var scene = new Scene('canvas', {
             infinity: true,
             scaleX: 1,
-            scaleY: 1
+            scaleY: 1,
+            zoom: 2
         });
 
         // Drawing a rect
@@ -48,8 +49,8 @@
         var box4 = new Box($('<input />', {
             type: 'button', 
             value: 'Button',
-            width: '100',
-            height: '100'
+            width: '300',
+            height: '300'
         }));
 
         var box5 = new Box(function(ctx){
@@ -73,7 +74,7 @@
         scene.addBox(box1, 0, 0, 5);
         scene.addBox(box2, 40, 180, 1);
         scene.addBox(box3, 0, 20, 2);
-        scene.addBox(box4, 180, 120);
+        scene.addBox(box4, 180, 120, 99);
         scene.addBox(box5, 120, 0);
         scene.addBox(box6, 150, 150);
 
@@ -101,9 +102,9 @@
             console.log('Mouse down box3');
         }
 
-        box4.onTouchStart = box4.onMouseDown = function(){
-            scene.removeBox(box4.handle);
-        }
+        // box4.onTouchStart = box4.onMouseDown = function(){
+        //     scene.removeBox(box4.handle);
+        // }
 
         var isDragging = false;
         var selectedBox = null;

@@ -21,6 +21,7 @@ export default class Scene{
         this.scaleX = this.opts.scaleX || 1;
         this.scaleY = this.opts.scaleY || 1;
         this.ctx.scale(this.scaleX, this.scaleY);
+        this.zoom = this.opts.zoom || 1;
 
         // Parameters associated with Infinite Canvas
         this.offsetX = 0;
@@ -30,6 +31,10 @@ export default class Scene{
         this.mousedown = false;
         this.originX = -1;
         this.originY = -1;
+
+        // Parameters associated with zoom
+        this.doubleTap = false;
+        this.tapDistance = -1;
 
         // Register Event
         if(this._isMobile()){
@@ -48,18 +53,26 @@ export default class Scene{
             this.$canvas.on('mousemove', this._onMouseMove.bind(this));
             this.$canvas.on('mouseover', this._onMouseOver.bind(this));
             this.$canvas.on('mouseout', this._onMouseOut.bind(this));
+            this.$canvas.on('mousewheel', this._onMouseWheel.bind(this));
 
             this.elementContainer.on('mouseup', '*', this._onContainerMouseUp.bind(this));
             this.elementContainer.on('mousedown', '*', this._onContainerMouseDown.bind(this));
             this.elementContainer.on('mousemove', '*', this._onMouseMove.bind(this));
             this.elementContainer.on('mouseover', '*', this._onContainerMouseOver.bind(this));
             this.elementContainer.on('mouseout', '*', this._onContainerMouseOut.bind(this));
+            this.elementContainer.on('mousewheel', '*', this._onMouseWheel.bind(this));
         }
     }
 
     _isMobile(){
         // return true;
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+
+    _calcDistance(x0, y0, x1, y1){
+        let xdiff = x1 - x0;
+        let ydiff = y1 - y0;
+        return Math.pow(xdiff * xdiff + ydiff * ydiff, 0.5);
     }
 
     _initElementContainer(){
@@ -122,13 +135,16 @@ export default class Scene{
         if(box.isElement){
             if(box.show_){
                 box.element.css('display', 'inline-block');
-                box.element.css('left', box.x + this.offsetX);
-                box.element.css('top', box.y + this.offsetY);
+                box.element.css('left', box.x * this.zoom + this.offsetX);
+                box.element.css('top', box.y * this.zoom + this.offsetY);
+                box.element.css('z-index', box.z);
+                box.element.css('transform', `scale(${this.zoom}, ${this.zoom})`);
+                box.element.css('transform-origin', 'left top');
             } else {
                 box.element.css('display', 'none');
             }
         } else if(box.show_) {
-            let ctx = new Context(this.ctx, box.x + this.offsetX, box.y + this.offsetY);
+            let ctx = new Context(this.ctx, box.x * this.zoom + this.offsetX, box.y * this.zoom + this.offsetY, this.zoom);
             box.render(ctx);
             box.paths = ctx._getPaths();
         }
@@ -177,9 +193,9 @@ export default class Scene{
         this._MouseUp();
         let selected = this._onSelected(x, y);
         if(selected != undefined){
-            selected.onMouseUp(e, x, y);
+            selected.onMouseUp(e, x / this.zoom, y / this.zoom);
         }
-        this.onMouseUp(e, x, y, selected);
+        this.onMouseUp(e, x / this.zoom, y / this.zoom, selected);
     }
 
     _onMouseDown(e){
@@ -189,29 +205,29 @@ export default class Scene{
         this._MouseDown(x, y);
         let selected = this._onSelected(x, y);
         if(selected != undefined){
-            selected.onMouseDown(e, x, y);
+            selected.onMouseDown(e, x / this.zoom, y / this.zoom);
         }
-        this.onMouseDown(e, x, y, selected);
+        this.onMouseDown(e, x / this.zoom, y / this.zoom, selected);
     }
 
     _onMouseMove(e){
         e.preventDefault();
         let x = e.pageX - this.canvas.offsetLeft;
         let y = e.pageY - this.canvas.offsetTop;
-        this.onMouseMove(e, x, y);
+        this.onMouseMove(e, x / this.zoom, y / this.zoom);
         let selected = this._onSelected(x, y);
         if(selected != undefined){
             if(this.selected == undefined || this.selected.handle != selected.handle){
                 this.selected = selected;
-                this.onTouch(e, x, y, selected);
-                selected.onMouseOver(e, x, y);
+                this.onTouch(e, x / this.zoom, y / this.zoom, selected);
+                selected.onMouseOver(e, x / this.zoom, y / this.zoom);
             }
         } else {
             if(this.selected != undefined){
                 let originalSelected = this.selected;
                 this.selected = selected;
-                this.onTouch(e, x, y, selected);
-                originalSelected.onMouseOut(e, x, y);
+                this.onTouch(e, x / this.zoom, y / this.zoom, selected);
+                originalSelected.onMouseOut(e, x / this.zoom, y / this.zoom);
             }
             if(this.infinity && this.mousedown){
                 this.offsetX += x - this.originX;
@@ -231,7 +247,7 @@ export default class Scene{
         }
         let x = e.pageX - this.canvas.offsetLeft;
         let y = e.pageY - this.canvas.offsetTop;
-        this.onMouseOver(e, x, y);
+        this.onMouseOver(e, x / this.zoom, y / this.zoom);
     }
 
     _onMouseOut(e){
@@ -243,41 +259,74 @@ export default class Scene{
         let x = e.pageX - this.canvas.offsetLeft;
         let y = e.pageY - this.canvas.offsetTop;
         this._MouseUp();
-        this.onMouseOut(e, x, y);
+        this.onMouseOut(e, x / this.zoom, y / this.zoom);
+    }
+
+    _onMouseWheel(e){
+        e.preventDefault();
+        this.zoom += -e.wheelDelta / 120 / 20;
+        if(this.zoom < 0.1){
+            this.zoom = 0.1;
+        } else if(this.zoom > 10){
+            this.zoom = 10;
+        }
+        this.render();
     }
 
     // Canvas Touch Events
 
     _onTouchStart(e){
         e.preventDefault();
+        if(e.touches.length === 2){
+            this.doubleTap = true;
+            this.tapDistance = this._calcDistance(
+                e.touches[0].pageX, e.touches[0].pageY,
+                e.touches[1].pageX, e.touches[1].pageY
+                );
+        }
         let x = e.touches[0].pageX - this.canvas.offsetLeft;
         let y = e.touches[0].pageY - this.canvas.offsetTop;
         this._MouseDown(x, y);
         let selected = this._onSelected(x, y);
         if(selected != undefined){
-            selected.onTouchStart(e, x, y);
+            selected.onTouchStart(e, x / this.zoom, y / this.zoom);
         }
-        this.onTouchStart(e, x, y, selected);
+        this.onTouchStart(e, x / this.zoom, y / this.zoom, selected);
     }
 
     _onTouchMove(e){
         e.preventDefault();
+        if(e.touches.length === 2 && this.doubleTap){
+            let tapDistance = this._calcDistance(
+                e.touches[0].pageX, e.touches[0].pageY,
+                e.touches[1].pageX, e.touches[1].pageY
+                );
+            let diff = this.tapDistance - tapDistance;
+            this.zoom += -diff / this.canvas.width;
+            if(this.zoom < 0.1){
+                this.zoom = 0.1;
+            } else if(this.zoom > 10){
+                this.zoom = 10;
+            }
+            this.render();
+            this.tapDistance = tapDistance;
+        }
         let x = e.touches[0].pageX - this.canvas.offsetLeft;
         let y = e.touches[0].pageY - this.canvas.offsetTop;
-        this.onTouchMove(e, x, y);
+        this.onTouchMove(e, x / this.zoom, y / this.zoom);
         let selected = this._onSelected(x, y);
         if(selected != undefined){
             if(this.selected == undefined || this.selected.handle != selected.handle){
                 this.selected = selected;
-                this.onTouch(e, x, y, selected);
-                selected.onTouchEnter(e, x, y);
+                this.onTouch(e, x / this.zoom, y / this.zoom, selected);
+                selected.onTouchEnter(e, x / this.zoom, y / this.zoom);
             }
         } else {
             if(this.selected != undefined){
                 let originalSelected = this.selected;
                 this.selected = selected;
-                this.onTouch(e, x, y, selected);
-                originalSelected.onTouchLeave(e, x, y);
+                this.onTouch(e, x / this.zoom, y / this.zoom, selected);
+                originalSelected.onTouchLeave(e, x / this.zoom, y / this.zoom);
             }
             if(this.infinity && this.mousedown){
                 this.offsetX += x - this.originX;
@@ -291,14 +340,18 @@ export default class Scene{
 
     _onTouchEnd(e){
         e.preventDefault();
+        if(e.touches.length !== 2){
+            this.doubleTap = false;
+            this.tapDistance = -1;
+        }
         let x = e.changedTouches[0].pageX - this.canvas.offsetLeft;
         let y = e.changedTouches[0].pageY - this.canvas.offsetTop;
         this._MouseUp();
         let selected = this._onSelected(x, y);
         if(selected != undefined){
-            selected.onTouchEnd(e, x, y);
+            selected.onTouchEnd(e, x / this.zoom, y / this.zoom);
         }
-        this.onTouchEnd(e, x, y, selected);
+        this.onTouchEnd(e, x / this.zoom, y / this.zoom, selected);
     }
 
     _onTouchCancel(e){
@@ -309,28 +362,39 @@ export default class Scene{
 
     _onContainerTouchStart(e){
         e.preventDefault();
+        if(e.touches.length === 2){
+            this.doubleTap = true;
+            this.tapDistance = this._calcDistance(
+                e.touches[0].pageX, e.touches[0].pageY,
+                e.touches[1].pageX, e.touches[1].pageY
+                );
+        }
         let element = $(e.target);
         if(element.attr('handle') != undefined){
             let box = this.elements[element.attr('handle')];
             if(box != undefined){
                 let x = e.touches[0].pageX - this.canvas.offsetLeft;
                 let y = e.touches[0].pageY - this.canvas.offsetTop;
-                this.onTouchStart(e, x, y, box);
-                box.onTouchStart(e, x, y);
+                this.onTouchStart(e, x / this.zoom, y / this.zoom, box);
+                box.onTouchStart(e, x / this.zoom, y / this.zoom);
             }
         }
     }
 
     _onContainerTouchEnd(e){
         e.preventDefault();
+        if(e.touches.length !== 2){
+            this.doubleTap = false;
+            this.tapDistance = -1;
+        }
         let element = $(e.target);
         if(element.attr('handle') != undefined){
             let box = this.elements[element.attr('handle')];
             if(box != undefined){
                 let x = e.changedTouches[0].pageX - this.canvas.offsetLeft;
                 let y = e.changedTouches[0].pageY - this.canvas.offsetTop;
-                this.onTouchEnd(e, x, y, box);
-                box.onTouchEnd(e, x, y);
+                this.onTouchEnd(e, x / this.zoom, y / this.zoom, box);
+                box.onTouchEnd(e, x / this.zoom, y / this.zoom);
             }
         }
     }
@@ -350,8 +414,8 @@ export default class Scene{
             if(box != undefined){
                 let x = e.pageX - this.canvas.offsetLeft;
                 let y = e.pageY - this.canvas.offsetTop;
-                this.onMouseUp(e, x, y, box);
-                box.onMouseUp(e, x, y);
+                this.onMouseUp(e, x / this.zoom, y / this.zoom, box);
+                box.onMouseUp(e, x / this.zoom, y / this.zoom);
             }
         }
     }
@@ -364,8 +428,8 @@ export default class Scene{
             if(box != undefined){
                 let x = e.pageX - this.canvas.offsetLeft;
                 let y = e.pageY - this.canvas.offsetTop;
-                this.onMouseDown(e, x, y, box);
-                box.onMouseDown(e, x, y);
+                this.onMouseDown(e, x / this.zoom, y / this.zoom, box);
+                box.onMouseDown(e, x / this.zoom, y / this.zoom);
             }
         }
     }
@@ -378,11 +442,11 @@ export default class Scene{
             if(box != undefined){
                 let x = e.pageX - this.canvas.offsetLeft;
                 let y = e.pageY - this.canvas.offsetTop;
-                this.onTouch(e, x, y, box);
-                box.onMouseOver(e, x, y);
+                this.onTouch(e, x / this.zoom, y / this.zoom, box);
+                box.onMouseOver(e, x / this.zoom, y / this.zoom);
                 if(x > 0 && x < this.canvas.width &&
                     y > 0 && y < this.canvas.height){
-                        this.onMouseOver(e, x, y);
+                        this.onMouseOver(e, x / this.zoom, y / this.zoom);
                     }
             }
         }
@@ -396,12 +460,12 @@ export default class Scene{
             if(box != undefined){
                 let x = e.pageX - this.canvas.offsetLeft;
                 let y = e.pageY - this.canvas.offsetTop;
-                this.onTouch(e, x, y, null);
-                box.onMouseOut(e, x, y);
+                this.onTouch(e, x / this.zoom, y / this.zoom, null);
+                box.onMouseOut(e, x / this.zoom, y / this.zoom);
                 if(x < 0 || x > this.canvas.width ||
                     y < 0 || y > this.canvas.height){
                         this._MouseUp();
-                        this.onMouseOut(e, x, y);
+                        this.onMouseOut(e, x / this.zoom, y / this.zoom);
                     }
             }
         }

@@ -1,15 +1,23 @@
+import _ from 'lodash';
 import Path from './Path';
 
 export default class Context {
-    constructor(ctx, x, y){
+    constructor(ctx, x, y, zoom){
         this.ctx = ctx;
         this.x = x;
         this.y = y;
+        this.zoom = zoom;
         this.paths = [];
     }
 
     _getPaths(){
         return this.paths.reverse();
+    }
+
+    _zoom(){
+        return _.map(arguments, function(val){
+            return val * this.zoom;
+        }.bind(this));
     }
 
     createPath(){
@@ -23,6 +31,7 @@ export default class Context {
     // Drawing rectangles
 
     clearRect(x, y, width, height){
+        [x, y, width, height] = this._zoom(x, y, width, height);
         let path = new Path2D();
         path.rect(this.x + x, this.y + y, width, height);
         this.ctx.clearRect(this.x + x, this.y + y, width, height);
@@ -30,6 +39,7 @@ export default class Context {
     }
 
     fillRect(x, y, width, height){
+        [x, y, width, height] = this._zoom(x, y, width, height);
         let path = new Path2D();
         path.rect(this.x + x, this.y + y, width, height);
         this.ctx.fill(path);
@@ -37,6 +47,7 @@ export default class Context {
     }
 
     strokeRect(x, y, width, height, select = false){
+        [x, y, width, height] = this._zoom(x, y, width, height);
         let path = new Path2D();
         path.rect(this.x + x, this.y + y, width, height);
         this.ctx.stroke(path);
@@ -48,6 +59,7 @@ export default class Context {
     // Drawing text
 
     fillText(text, x, y, maxWidth = null){
+        [x, y, maxWidth] = this._zoom(x, y, maxWidth);
         let mtext = this.ctx.measureText(text);
         this.ctx.fillText(text, x, y, maxWidth);
         let path = new Path2D();
@@ -60,6 +72,7 @@ export default class Context {
     }
 
     strokeText(text, x, y, maxWidth = null){
+        [x, y, maxWidth] = this._zoom(x, y, maxWidth);
         let mtext = this.ctx.measureText(text);
         this.ctx.strokeText(text, x, y, maxWidth);
         let path = new Path2D();
@@ -180,10 +193,12 @@ export default class Context {
     // Gradients and patterns
 
     createLinearGradient(x0, y0, x1, y1){
+        [x0, y0, x1, y1] = this._zoom(x0, y0, x1, y1);
         this.ctx.createLinearGradient(this.x + x0, this.y + y0, this.x + x1, this.y + y1);
     }
 
     createRadialGradient(x0, y0, r0, x1, y1, r1){
+        [x0, y0, r0, x1, y1, r1] = this._zoom(x0, y0, r0, x1, y1, r1);
         this.ctx.createRadialGradient(this.x + x0, this.y + y0, r0, this.x + x1, this.y + y1, r1);
     }
 
@@ -265,11 +280,13 @@ export default class Context {
     }
 
     isPointInPath(path, x, y, fillRule){
+        [x, y] = this._zoom(x, y);
         path = path.nativePath;
         this.ctx.isPointInPath(path, this.x + x, this.y + y, fillRule);
     }
 
     isPointInStroke(path, x, y){
+        [x, y] = this._zoom(x, y);
         path = path.nativePath;
         this.ctx.isPointInStroke(path, this.x + x, this.y + y);
     }
