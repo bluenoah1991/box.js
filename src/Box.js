@@ -86,6 +86,54 @@ export default class Box{
         }
     }
 
+    elementMarginTop(){
+        if(this.isElement){
+            let zoom = 1;
+            if(this.mount){
+                zoom = this.scene.zoom;
+            }
+            return this.element.css('margin-top') / this.scene.zoom;
+        } else {
+            return -1;
+        }
+    }
+
+    elementMarginRight(){
+        if(this.isElement){
+            let zoom = 1;
+            if(this.mount){
+                zoom = this.scene.zoom;
+            }
+            return this.element.css('margin-right') / this.scene.zoom;
+        } else {
+            return -1;
+        }
+    }
+
+    elementMarginBottom(){
+        if(this.isElement){
+            let zoom = 1;
+            if(this.mount){
+                zoom = this.scene.zoom;
+            }
+            return this.element.css('margin-bottom') / this.scene.zoom;
+        } else {
+            return -1;
+        }
+    }
+
+    elementMarginLeft(){
+        if(this.isElement){
+            let zoom = 1;
+            if(this.mount){
+                zoom = this.scene.zoom;
+            }
+            return this.element.css('margin-left') / this.scene.zoom;
+        } else {
+            return -1;
+        }
+    }
+
     // events
 
     onMouseUp(e, x, y){
