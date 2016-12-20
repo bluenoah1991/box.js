@@ -328,7 +328,7 @@ export default class Scene{
                 this.onTouch(e, x / this.zoom, y / this.zoom, selected);
                 originalSelected.onTouchLeave(e, x / this.zoom, y / this.zoom);
             }
-            if(this.infinity && this.mousedown){
+            if(this.infinity && this.mousedown && e.touches.length === 1){
                 this.offsetX += x - this.originX;
                 this.offsetY += y - this.originY;
                 this.originX = x;
