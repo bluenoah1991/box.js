@@ -264,7 +264,7 @@ export default class Scene{
 
     _onMouseWheel(e){
         e.preventDefault();
-        this.zoom += -e.wheelDelta / 120 / 20;
+        this.zoom += e.wheelDelta / 120 / 20;
         if(this.zoom < 0.1){
             this.zoom = 0.1;
         } else if(this.zoom > 10){
@@ -302,7 +302,7 @@ export default class Scene{
                 e.touches[1].pageX, e.touches[1].pageY
                 );
             let diff = this.tapDistance - tapDistance;
-            this.zoom += -diff / this.canvas.width;
+            this.zoom += -diff / this.canvas.width * 2;
             if(this.zoom < 0.1){
                 this.zoom = 0.1;
             } else if(this.zoom > 10){
