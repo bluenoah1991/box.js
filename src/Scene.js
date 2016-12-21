@@ -481,8 +481,8 @@ export default class Scene{
             this._addToDom(box);
         } else {
             this._addToLayer(box);
-            this.render();
         }
+        this.render();
         box.scene = this;
         box.mount = true;
         return handle;

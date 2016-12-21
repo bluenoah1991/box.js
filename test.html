@@ -49,8 +49,8 @@
         var box4 = new Box($('<input />', {
             type: 'button', 
             value: 'Button',
-            width: '300',
-            height: '300'
+            width: '150',
+            height: '150'
         }));
 
         var box5 = new Box(function(ctx){
@@ -63,8 +63,8 @@
         var box6_ele = $('<input />', {
             type: 'button',
             value: 'Close',
-            width: '100',
-            height: '60'
+            width: '40',
+            height: '40'
         });
         box6_ele.on('click', function(){
             scene.close();
@@ -76,7 +76,7 @@
         scene.addBox(box3, 0, 20, 2);
         scene.addBox(box4, 180, 120, 99);
         scene.addBox(box5, 120, 0);
-        scene.addBox(box6, 150, 150);
+        scene.addBox(box6, 0, 260);
 
         box1.onMouseUp = function(){
             // console.log('Mouse up ' + box1.handle);

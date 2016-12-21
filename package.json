@@ -1,6 +1,6 @@
 {
   "name": "box.js",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Canvas object-oriented programming library",
   "main": "index.js",
   "dependencies": {
