@@ -30,7 +30,7 @@
         // Drawing a rect
         var box1 = new Box(function(ctx){
             ctx.setFillStyle('blue');
-            ctx.fillRect(10, 10, 30, 30);
+            ctx.fillRect(0, 0, 30, 30);
         });
 
         var box2 = new Box(function(ctx){
@@ -60,6 +60,18 @@
             ctx.stroke(path);
         });
 
+        var box7 = null;
+        var box8 = null;
+
+        setTimeout(function(){
+            box7 = new Box(function(ctx){ ctx.setFillStyle('red'); ctx.fillRect(0, 0, 30, 30); });
+            scene.addBox(box7, 50, 50, 10);
+            setTimeout(function(){
+                box8 = new Box(function(ctx){ ctx.setFillStyle('yellow'); ctx.fillRect(0, 0, 30, 30); });
+                scene.addBox(box8, 50, 50, 20);
+            }, 3000);
+        }, 3000);
+
         var box6_ele = $('<input />', {
             type: 'button',
             value: 'Close',
@@ -77,6 +89,7 @@
         scene.addBox(box4, 180, 120, 99);
         scene.addBox(box5, 120, 0);
         scene.addBox(box6, 0, 260);
+
 
         box1.onMouseUp = function(){
             // console.log('Mouse up ' + box1.handle);
