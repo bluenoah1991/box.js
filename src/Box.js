@@ -15,6 +15,8 @@ export default class Box{
         this.x = 0;
         this.y = 0;
         this.z = 0;
+        this.offsetX = 0;
+        this.offsetY = 0;
         this.show_ = true;
     }
 
@@ -44,6 +46,28 @@ export default class Box{
         this.x = x;
         this.y = y;
         this.z = z;
+        if(this.mount){
+            [this.offsetX, this.offsetY] = this.scene._reverseOffset(x, y);
+        }
+    }
+
+    setAbsPosition(realX, realY, z = 0){
+        if(this.mount){
+            [this.x, this.y] = this.scene._reversePos(realX, realY);
+            [this.offsetX, this.offsetY] = [realX - this.x, realY - this.y];
+        } else {
+            this.x = x;
+            this.y = y;
+        }
+        this.z = z;
+    }
+
+    absX(){
+        return this.x + this.offsetX;
+    }
+
+    absY(){
+        return this.y + this.offsetY;
     }
 
     show(){

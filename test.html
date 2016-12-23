@@ -24,7 +24,7 @@
             infinity: true,
             scaleX: 1,
             scaleY: 1,
-            zoom: 2
+            zoom: 1
         });
 
         // Drawing a rect
@@ -60,19 +60,8 @@
             ctx.stroke(path);
         });
 
-        var box7 = null;
-        var box8 = null;
-
-        setTimeout(function(){
-            box7 = new Box(function(ctx){ ctx.setFillStyle('red'); ctx.fillRect(0, 0, 30, 30); });
-            scene.addBox(box7, 50, 50, 10);
-            box8 = new Box(function(ctx){ ctx.setFillStyle('yellow'); ctx.fillRect(0, 0, 30, 30); });
-            scene.addBox(box8, 50, 50, 20);
-            setTimeout(function(){
-                box8.setPosition(box7.x + 30 * scene.zoom, box7.y, 20);
-                scene.render();
-            }, 3000);
-        }, 1000);
+        var box7 = new Box(function(ctx){ ctx.setFillStyle('red'); ctx.fillRect(0, 0, 30, 30); });
+        var box8 = new Box(function(ctx){ ctx.setFillStyle('green'); ctx.fillRect(0, 0, 30, 30); });
 
         var box6_ele = $('<input />', {
             type: 'button',
@@ -85,12 +74,21 @@
         });
         var box6 = new Box(box6_ele);
 
-        scene.addBox(box1, 0, 0, 5);
-        scene.addBox(box2, 80, 360, 1);
-        scene.addBox(box3, 0, 40, 2);
-        scene.addBox(box4, 360, 240, 99);
-        scene.addBox(box5, 240, 0);
-        scene.addBox(box6, 0, 520);
+        scene.addBox(box1, 50, 50, 5);
+        scene.addBox(box2, 40, 180, 1);
+        scene.addBox(box3, 0, 20, 2);
+        scene.addBox(box4, 180, 120, 99);
+        scene.addBox(box5, 120, 0);
+        scene.addBox(box6, 0, 260);
+        scene.addBox(box7, 0, 0, 10);
+        scene.setZoom(2, 0, 0);
+        box1.setAbsPosition(100, 100, 5);
+        scene.render();
+        setTimeout(function(){
+            box7.setPosition(box1.x, box1.y, 10);
+            scene.render();
+            scene.addBox(box8, box1.x, box1.y, 20);
+        }, 3000);
 
 
         box1.onMouseUp = function(){
@@ -143,8 +141,8 @@
             isDragging = true;
             selectedBox = box;
             if(selectedBox != undefined){
-                offsetX = x - box.x;
-                offsetY = y - box.y;
+                offsetX = x - box.absX();
+                offsetY = y - box.absY();
             }
         }
 
@@ -152,7 +150,7 @@
             // console.log('Move to x = ' + x + ' and y = ' + y);
             if(isDragging){
                 if(selectedBox != undefined){
-                    selectedBox.setPosition(x - offsetX, y - offsetY);
+                    selectedBox.setAbsPosition(x - offsetX, y - offsetY);
                     scene.render();
                 }
             }

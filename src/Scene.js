@@ -21,7 +21,7 @@ export default class Scene{
         this.scaleX = this.opts.scaleX || 1;
         this.scaleY = this.opts.scaleY || 1;
         this.ctx.scale(this.scaleX, this.scaleY);
-        this.zoom = this.opts.zoom || 1;
+        this.initZoom = this.zoom = this.opts.zoom || 1;
 
         // Parameters associated with Infinite Canvas
         this.offsetX = 0;
@@ -35,6 +35,9 @@ export default class Scene{
         // Parameters associated with zoom
         this.doubleTap = false;
         this.tapDistance = -1;
+
+        this.originOffsetX = 0;
+        this.originOffsetY = 0;
 
         // Register Event
         if(this._isMobile()){
@@ -131,6 +134,18 @@ export default class Scene{
         delete this.elements[box.handle];
     }
 
+    _reversePos(realX, realY){
+        let x = (realX - this.originOffsetX) * this.initZoom / this.zoom;
+        let y = (realY - this.originOffsetY) * this.initZoom / this.zoom;
+        return [x, y];
+    }
+
+    _reverseOffset(x, y){
+        let realX = x * this.zoom / this.initZoom + this.originOffsetX;
+        let realY = y * this.zoom / this.initZoom + this.originOffsetY;
+        return [realX - x, realY - y];
+    }
+
     _zoomOffset(originX, originY, x, y, zoomDelta){
         let projX = x - originX;
         let projY = y - originY;
@@ -142,22 +157,27 @@ export default class Scene{
     }
 
     _adjustZoomOffset(originX, originY, zoomDelta){
+        let [offsetX, offsetY] = this._zoomOffset(originX, originY, this.originOffsetX, this.originOffsetY, zoomDelta);
+        this.originOffsetX += offsetX;
+        this.originOffsetY += offsetY;
         _.forEach(this.boxs, function(box, handle){
-            let [offsetX, offsetY] = this._zoomOffset(originX, originY, box.x, box.y, zoomDelta);
-            box.x += offsetX;
-            box.y += offsetY;
+            let [offsetX, offsetY] = this._zoomOffset(originX, originY, box.x + box.offsetX, box.y + box.offsetY, zoomDelta);
+            box.offsetX += offsetX;
+            box.offsetY += offsetY;
         }.bind(this));
     }
 
     _adjustTranslateOffset(translateDeltaX, translateDeltaY){
+        this.originOffsetX += translateDeltaX;
+        this.originOffsetY += translateDeltaY;
         _.forEach(this.boxs, function(box, handle){
-            box.x += translateDeltaX;
-            box.y += translateDeltaY;
+            box.offsetX += translateDeltaX;
+            box.offsetY += translateDeltaY;
         }.bind(this));
     }
 
     _renderOne(box){
-        let [x, y] = [box.x, box.y];
+        let [x, y] = [box.x + box.offsetX, box.y + box.offsetY];
         if(box.isElement){
             if(box.show_){
                 box.element.css('display', 'inline-block');
@@ -506,6 +526,8 @@ export default class Scene{
     addBox(box, x, y, z){
         let handle = box.handle = uuid.v1();
         this.boxs[handle] = box;
+        box.mount = true;
+        box.scene = this;
         box.setPosition(x, y, z);
         if(box.isElement){
             this._addToDom(box);
@@ -513,8 +535,6 @@ export default class Scene{
             this._addToLayer(box);
         }
         this.render();
-        box.scene = this;
-        box.mount = true;
         return handle;
     }
 
@@ -535,6 +555,12 @@ export default class Scene{
         } else {
             return false;
         }
+    }
+
+    setZoom(zoom = 1, originX = 0, originY = 0){
+        let zoomDelta = zoom / this.zoom;
+        this.zoom = zoom;
+        this._adjustZoomOffset(originX, originY, zoomDelta);
     }
 
     render(){
