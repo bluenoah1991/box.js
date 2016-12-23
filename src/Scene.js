@@ -141,29 +141,23 @@ export default class Scene{
         return [zoomX - x, zoomY - y];
     }
 
-    _adjustBoxZoomOffset(box, originX, originY, zoomDelta){
-        let [offsetX, offsetY] = this._zoomOffset(originX, originY, box.x + box.offsetX, box.y + box.offsetY, zoomDelta);
-        box.offsetX += offsetX;
-        box.offsetY += offsetY;
-    }
-
     _adjustZoomOffset(originX, originY, zoomDelta){
         _.forEach(this.boxs, function(box, handle){
-            let [offsetX, offsetY] = this._zoomOffset(originX, originY, box.x + box.offsetX, box.y + box.offsetY, zoomDelta);
-            box.offsetX += offsetX;
-            box.offsetY += offsetY;
+            let [offsetX, offsetY] = this._zoomOffset(originX, originY, box.x, box.y, zoomDelta);
+            box.x += offsetX;
+            box.y += offsetY;
         }.bind(this));
     }
 
     _adjustTranslateOffset(translateDeltaX, translateDeltaY){
         _.forEach(this.boxs, function(box, handle){
-            box.offsetX += translateDeltaX;
-            box.offsetY += translateDeltaY;
+            box.x += translateDeltaX;
+            box.y += translateDeltaY;
         }.bind(this));
     }
 
     _renderOne(box){
-        let [x, y] = [box.x + box.offsetX, box.y + box.offsetY];
+        let [x, y] = [box.x, box.y];
         if(box.isElement){
             if(box.show_){
                 box.element.css('display', 'inline-block');
@@ -518,7 +512,6 @@ export default class Scene{
         } else {
             this._addToLayer(box);
         }
-        this._adjustBoxZoomOffset(box, 0, 0, this.zoom);
         this.render();
         box.scene = this;
         box.mount = true;

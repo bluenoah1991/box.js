@@ -15,8 +15,6 @@ export default class Box{
         this.x = 0;
         this.y = 0;
         this.z = 0;
-        this.offsetX = 0;
-        this.offsetY = 0;
         this.show_ = true;
     }
 
