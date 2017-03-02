@@ -13,6 +13,7 @@ export default class Scene{
         this.layers = [];
         this.reverseLayers = [];
         this.selected = null;
+        this.visibleState = false;
         this.vissence = VisSense(this.canvas);
         this.elementContainer = this._initElementContainer();
         this.vissence.monitor({
@@ -85,15 +86,13 @@ export default class Scene{
     }
 
     _onFullyVisible(){
-        if(this.elementContainer == undefined){
-            this._initElementContainer();
-        } else {
+        if(!this.visibleState){
             this._resetElementContainer();
         }
     }
 
     _onHidden(){
-        if(this.elementContainer != undefined){
+        if(!!this.visibleState){
             this._hiddenElementContainer();
         }
     }
@@ -108,8 +107,10 @@ export default class Scene{
         let display_state = 'none';
         if(this.vissence.isFullyVisible()){
             display_state = 'inline-block';
+            this.visibleState = true;
         }
         let container = $('<div />');
+        container.addClass('boxElementContainer');
         container.css({
             display: display_state,
             overflow: 'hidden',
@@ -145,12 +146,14 @@ export default class Scene{
             top: this.canvas.offsetTop + border_top_width,
             pointerEvents: 'none'
         });
+        this.visibleState = true;
     }
 
     _hiddenElementContainer(){
         this.elementContainer.css({
             display: 'none',
         });
+        this.visibleState = false;
     }
 
     _addToLayer(box){
@@ -577,6 +580,22 @@ export default class Scene{
     }
 
     // Public Methods
+
+    show(){
+        if(!this.visibleState){
+            this.$canvas.show();
+            this._onFullyVisible();
+            this.visibleState = true;
+        }
+    }
+
+    hide(){
+        if(!!this.visibleState){
+            this.$canvas.hide();
+            this._onHidden();
+            this.visibleState = false;
+        }
+    }
 
     addBox(box, x, y, z){
         let handle = box.handle = uuid.v1();

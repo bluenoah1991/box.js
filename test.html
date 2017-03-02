@@ -18,12 +18,21 @@
         $('#hide_button').click(function(){
             $('#canvas').css({'display': 'none'});
         });
+        $('#show_canvas').click(function(){
+            window.CurrentScene.show();
+        });
+        $('#hide_canvas').click(function(){
+            window.CurrentScene.hide();
+        });
     });
     </script>
 </head>
 <body>
     <input id="show_button" type="button" value="Show Canvas" />
     <input id="hide_button" type="button" value="Hide Canvas" />
+    <input id="show_canvas" type="button" value="Show Canvas Use API" />
+    <input id="hide_canvas" type="button" value="Hide Canvas Use API" />
+    <br /><br /><br />
     <canvas width='600' height='600' id="canvas"></canvas>
     <script type="text/javascript" src="./bundle.js"></script>
     <script type="text/javascript">
@@ -32,7 +41,7 @@
         var ctx = canvas.getContext('2d');
 
         // Drawing your graph
-        var scene = new Scene('canvas', {
+        var scene = window.CurrentScene = new Scene('canvas', {
             infinity: true,
             scaleX: 1,
             scaleY: 1,
