@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import uuid from 'node-uuid';
+import VisSense from 'vissense';
 
 import Context from './Context';
 
@@ -12,7 +13,12 @@ export default class Scene{
         this.layers = [];
         this.reverseLayers = [];
         this.selected = null;
+        this.vissence = VisSense(this.canvas);
         this.elementContainer = this._initElementContainer();
+        this.vissence.monitor({
+            visible: this._onFullyVisible.bind(this),
+            hidden: this._onHidden.bind(this)
+        }).start();
         this.elements = {};
 
         // Options
@@ -78,17 +84,37 @@ export default class Scene{
         return Math.pow(xdiff * xdiff + ydiff * ydiff, 0.5);
     }
 
+    _onFullyVisible(){
+        if(this.elementContainer == undefined){
+            this._initElementContainer();
+        } else {
+            this._resetElementContainer();
+        }
+    }
+
+    _onHidden(){
+        if(this.elementContainer != undefined){
+            this._hiddenElementContainer();
+        }
+    }
+
     _initElementContainer(){
+        let canvas_width = parseInt(this.$canvas.css('width'));
+        let canvas_height = parseInt(this.$canvas.css('height'));
         let border_top_width = parseInt(this.$canvas.css('border-top-width'));
         let border_right_width = parseInt(this.$canvas.css('border-right-width'));
         let border_bottom_width = parseInt(this.$canvas.css('border-bottom-width'));
         let border_left_width = parseInt(this.$canvas.css('border-left-width'));
+        let display_state = 'none';
+        if(this.vissence.isFullyVisible()){
+            display_state = 'inline-block';
+        }
         let container = $('<div />');
         container.css({
-            display: 'inline-block',
+            display: display_state,
             overflow: 'hidden',
-            width: this.$canvas.width() - border_left_width - border_right_width,
-            height: this.$canvas.height() - border_top_width - border_bottom_width,
+            width: canvas_width - border_left_width - border_right_width,
+            height: canvas_height - border_top_width - border_bottom_width,
             position: 'absolute',
             left: this.canvas.offsetLeft + border_left_width,
             top: this.canvas.offsetTop + border_top_width,
@@ -96,6 +122,35 @@ export default class Scene{
         });
         $('body').append(container);
         return container;
+    }
+
+    _resetElementContainer(){
+        let canvas_width = parseInt(this.$canvas.css('width')) +
+            parseInt(this.$canvas.css('border-left-width')) +
+            parseInt(this.$canvas.css('border-right-width'));
+        let canvas_height = parseInt(this.$canvas.css('height')) +
+            parseInt(this.$canvas.css('border-top-width')) +
+            parseInt(this.$canvas.css('border-bottom-width'));
+        let border_top_width = parseInt(this.$canvas.css('border-top-width'));
+        let border_right_width = parseInt(this.$canvas.css('border-right-width'));
+        let border_bottom_width = parseInt(this.$canvas.css('border-bottom-width'));
+        let border_left_width = parseInt(this.$canvas.css('border-left-width'));
+        this.elementContainer.css({
+            display: 'inline-block',
+            overflow: 'hidden',
+            width: canvas_width - border_left_width - border_right_width,
+            height: canvas_height - border_top_width - border_bottom_width,
+            position: 'absolute',
+            left: this.canvas.offsetLeft + border_left_width,
+            top: this.canvas.offsetTop + border_top_width,
+            pointerEvents: 'none'
+        });
+    }
+
+    _hiddenElementContainer(){
+        this.elementContainer.css({
+            display: 'none',
+        });
     }
 
     _addToLayer(box){

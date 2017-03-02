@@ -5,13 +5,25 @@
     <style>
         *{margin: 0; padding: 0;}
         body{padding: 50px;}
-        #canvas{border: #000 solid 1px; width: 600px; height: 600px;}
+        #canvas{border: #000 solid 1px; width: 600px; height: 600px; display: none;}
     </style>
     <!--<script type="text/javascript" src="./assets/hidpi-canvas.min.js"></script>-->
     <script type="text/javascript" src="./assets/canvas.js"></script>
     <script type="text/javascript" src="./assets/zepto.min.js"></script>
+    <script type="text/javascript">
+    $(function(){
+        $('#show_button').click(function(){
+            $('#canvas').css({'display': 'block'});
+        });
+        $('#hide_button').click(function(){
+            $('#canvas').css({'display': 'none'});
+        });
+    });
+    </script>
 </head>
 <body>
+    <input id="show_button" type="button" value="Show Canvas" />
+    <input id="hide_button" type="button" value="Hide Canvas" />
     <canvas width='600' height='600' id="canvas"></canvas>
     <script type="text/javascript" src="./bundle.js"></script>
     <script type="text/javascript">
