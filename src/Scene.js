@@ -373,7 +373,11 @@ export default class Scene{
         e.preventDefault();
         let x = e.pageX - this.canvas.offsetLeft;
         let y = e.pageY - this.canvas.offsetTop;
-        let zoomDelta = 1 + e.wheelDelta / 120 / 20;
+        let wheelDelta = e.wheelDelta;
+        if(wheelDelta == undefined){
+            wheelDelta = e.originalEvent.wheelDelta;
+        }
+        let zoomDelta = 1 + wheelDelta / 120 / 20;
         this.zoom *= zoomDelta;
         this._adjustZoomOffset(x, y, zoomDelta);
         this.render();
