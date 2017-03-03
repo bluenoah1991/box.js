@@ -1,11 +1,13 @@
 import _ from 'lodash';
 import uuid from 'node-uuid';
-import VisSense from 'vissense';
 
 import Context from './Context';
 
 export default class Scene{
     constructor(id, opts){
+        // Options
+        this.opts = opts || {};
+        
         this.canvas = document.getElementById(id);
         this.$canvas = $(this.canvas);
         this.ctx = this.canvas.getContext('2d');
@@ -13,17 +15,19 @@ export default class Scene{
         this.layers = [];
         this.reverseLayers = [];
         this.selected = null;
-        this.visibleState = false;
-        this.vissence = VisSense(this.canvas);
-        this.elementContainer = this._initElementContainer();
-        this.vissence.monitor({
-            visible: this._onFullyVisible.bind(this),
-            hidden: this._onHidden.bind(this)
-        }).start();
+
+        if(this.opts.elementContainer != undefined){
+            this.elementContainer = document.getElementById(this.opts.elementContainer);
+            this.$elementContainer = $(this.elementContainer);
+        } else {
+            this.$elementContainer = $('<div />');
+            $('body').append(this.$elementContainer);
+            this.elementContainer = this.$elementContainer[0];
+        }
+        this._resetElementContainer();
         this.elements = {};
 
-        // Options
-        this.opts = opts || {};
+        // Parameters associated with Scale
         this.infinity = this.opts.infinity || false;
         this.scaleX = this.opts.scaleX || 1;
         this.scaleY = this.opts.scaleY || 1;
@@ -53,10 +57,10 @@ export default class Scene{
             this.$canvas.on('touchend', this._onTouchEnd.bind(this));
             this.$canvas.on('touchcancel', this._onTouchCancel.bind(this));
 
-            this.elementContainer.on('touchstart', '*', this._onContainerTouchStart.bind(this));
-            this.elementContainer.on('touchmove', '*', this._onTouchMove.bind(this));
-            this.elementContainer.on('touchend', '*', this._onContainerTouchEnd.bind(this));
-            this.elementContainer.on('touchcancel', '*', this._onContainerTouchCancel.bind(this));
+            this.$elementContainer.on('touchstart', '*', this._onContainerTouchStart.bind(this));
+            this.$elementContainer.on('touchmove', '*', this._onTouchMove.bind(this));
+            this.$elementContainer.on('touchend', '*', this._onContainerTouchEnd.bind(this));
+            this.$elementContainer.on('touchcancel', '*', this._onContainerTouchCancel.bind(this));
         } else {
             this.$canvas.on('mouseup', this._onMouseUp.bind(this));
             this.$canvas.on('mousedown', this._onMouseDown.bind(this));
@@ -65,12 +69,12 @@ export default class Scene{
             this.$canvas.on('mouseout', this._onMouseOut.bind(this));
             this.$canvas.on('mousewheel', this._onMouseWheel.bind(this));
 
-            this.elementContainer.on('mouseup', '*', this._onContainerMouseUp.bind(this));
-            this.elementContainer.on('mousedown', '*', this._onContainerMouseDown.bind(this));
-            this.elementContainer.on('mousemove', '*', this._onMouseMove.bind(this));
-            this.elementContainer.on('mouseover', '*', this._onContainerMouseOver.bind(this));
-            this.elementContainer.on('mouseout', '*', this._onContainerMouseOut.bind(this));
-            this.elementContainer.on('mousewheel', '*', this._onMouseWheel.bind(this));
+            this.$elementContainer.on('mouseup', '*', this._onContainerMouseUp.bind(this));
+            this.$elementContainer.on('mousedown', '*', this._onContainerMouseDown.bind(this));
+            this.$elementContainer.on('mousemove', '*', this._onMouseMove.bind(this));
+            this.$elementContainer.on('mouseover', '*', this._onContainerMouseOver.bind(this));
+            this.$elementContainer.on('mouseout', '*', this._onContainerMouseOut.bind(this));
+            this.$elementContainer.on('mousewheel', '*', this._onMouseWheel.bind(this));
         }
     }
 
@@ -85,75 +89,28 @@ export default class Scene{
         return Math.pow(xdiff * xdiff + ydiff * ydiff, 0.5);
     }
 
-    _onFullyVisible(){
-        if(!this.visibleState){
-            this._resetElementContainer();
-        }
-    }
-
-    _onHidden(){
-        if(!!this.visibleState){
-            this._hiddenElementContainer();
-        }
-    }
-
-    _initElementContainer(){
-        let canvas_width = parseInt(this.$canvas.css('width'));
-        let canvas_height = parseInt(this.$canvas.css('height'));
-        let border_top_width = parseInt(this.$canvas.css('border-top-width'));
-        let border_right_width = parseInt(this.$canvas.css('border-right-width'));
-        let border_bottom_width = parseInt(this.$canvas.css('border-bottom-width'));
-        let border_left_width = parseInt(this.$canvas.css('border-left-width'));
-        let display_state = 'none';
-        if(this.vissence.isFullyVisible()){
-            display_state = 'inline-block';
-            this.visibleState = true;
-        }
-        let container = $('<div />');
-        container.addClass('boxElementContainer');
-        container.css({
-            display: display_state,
-            overflow: 'hidden',
-            width: canvas_width - border_left_width - border_right_width,
-            height: canvas_height - border_top_width - border_bottom_width,
-            position: 'absolute',
-            left: this.canvas.offsetLeft + border_left_width,
-            top: this.canvas.offsetTop + border_top_width,
-            pointerEvents: 'none'
-        });
-        $('body').append(container);
-        return container;
-    }
-
     _resetElementContainer(){
-        let canvas_width = parseInt(this.$canvas.css('width')) +
-            parseInt(this.$canvas.css('border-left-width')) +
-            parseInt(this.$canvas.css('border-right-width'));
-        let canvas_height = parseInt(this.$canvas.css('height')) +
-            parseInt(this.$canvas.css('border-top-width')) +
-            parseInt(this.$canvas.css('border-bottom-width'));
+        let canvas_width = this.$canvas.width();
+        let canvas_height = this.$canvas.height();
+        let canvas_offsetLeft = this.canvas.offsetLeft;
+        let canvas_offsetTop = this.canvas.offsetTop;
         let border_top_width = parseInt(this.$canvas.css('border-top-width'));
         let border_right_width = parseInt(this.$canvas.css('border-right-width'));
         let border_bottom_width = parseInt(this.$canvas.css('border-bottom-width'));
         let border_left_width = parseInt(this.$canvas.css('border-left-width'));
-        this.elementContainer.css({
+        if(!this.$elementContainer.hasClass('boxElementContainer')){
+            this.$elementContainer.addClass('boxElementContainer');
+        }
+        this.$elementContainer.css({
             display: 'inline-block',
             overflow: 'hidden',
             width: canvas_width - border_left_width - border_right_width,
             height: canvas_height - border_top_width - border_bottom_width,
             position: 'absolute',
-            left: this.canvas.offsetLeft + border_left_width,
-            top: this.canvas.offsetTop + border_top_width,
+            left: canvas_offsetLeft + border_left_width,
+            top: canvas_offsetTop + border_top_width,
             pointerEvents: 'none'
         });
-        this.visibleState = true;
-    }
-
-    _hiddenElementContainer(){
-        this.elementContainer.css({
-            display: 'none',
-        });
-        this.visibleState = false;
     }
 
     _addToLayer(box){
@@ -177,7 +134,7 @@ export default class Scene{
         box.element.css('position', 'absolute');
         box.element.css('left', box.x);
         box.element.css('top', box.y);
-        this.elementContainer.append(box.element);
+        this.$elementContainer.append(box.element);
     }
 
     _removeFromLayer(box){
@@ -585,22 +542,6 @@ export default class Scene{
 
     // Public Methods
 
-    show(){
-        if(!this.visibleState){
-            this.$canvas.show();
-            this._onFullyVisible();
-            this.visibleState = true;
-        }
-    }
-
-    hide(){
-        if(!!this.visibleState){
-            this.$canvas.hide();
-            this._onHidden();
-            this.visibleState = false;
-        }
-    }
-
     addBox(box, x, y, z){
         let handle = box.handle = uuid.v1();
         this.boxs[handle] = box;
@@ -652,6 +593,10 @@ export default class Scene{
         _.forEach(this.elements, function(element){
             this._renderOne(element);
         }.bind(this));
+    }
+
+    digest(){
+        this._resetElementContainer();
     }
 
     clear(){

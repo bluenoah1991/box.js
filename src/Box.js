@@ -92,7 +92,7 @@ export default class Box{
             if(this.mount){
                 zoom = this.scene.zoom;
             }
-            return parseInt(this.element.css('width')) / this.scene.zoom;
+            return this.element.width() / this.scene.zoom;
         } else {
             return -1;
         }
@@ -104,7 +104,7 @@ export default class Box{
             if(this.mount){
                 zoom = this.scene.zoom;
             }
-            return parseInt(this.element.css('height')) / this.scene.zoom;
+            return this.element.height() / this.scene.zoom;
         } else {
             return -1;
         }

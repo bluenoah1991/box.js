@@ -5,7 +5,8 @@
     <style>
         *{margin: 0; padding: 0;}
         body{padding: 50px;}
-        #canvas{border: #000 solid 1px; width: 600px; height: 600px; display: none;}
+        #container{display: none;}
+        #canvas{border: #000 solid 1px; width: 600px; height: 600px;}
     </style>
     <!--<script type="text/javascript" src="./assets/hidpi-canvas.min.js"></script>-->
     <script type="text/javascript" src="./assets/canvas.js"></script>
@@ -13,16 +14,11 @@
     <script type="text/javascript">
     $(function(){
         $('#show_button').click(function(){
-            $('#canvas').css({'display': 'block'});
+            $('#container').css({'display': 'block'});
+            window.CurrentScene.digest();
         });
         $('#hide_button').click(function(){
-            $('#canvas').css({'display': 'none'});
-        });
-        $('#show_canvas').click(function(){
-            window.CurrentScene.show();
-        });
-        $('#hide_canvas').click(function(){
-            window.CurrentScene.hide();
+            $('#container').css({'display': 'none'});
         });
     });
     </script>
@@ -30,10 +26,12 @@
 <body>
     <input id="show_button" type="button" value="Show Canvas" />
     <input id="hide_button" type="button" value="Hide Canvas" />
-    <input id="show_canvas" type="button" value="Show Canvas Use API" />
-    <input id="hide_canvas" type="button" value="Hide Canvas Use API" />
     <br /><br /><br />
-    <canvas width='600' height='600' id="canvas"></canvas>
+    <div id="container">
+        <canvas width='600' height='600' id="canvas"></canvas>
+        <div id="elementContainer"></div>
+    </div>
+
     <script type="text/javascript" src="./bundle.js"></script>
     <script type="text/javascript">
         // test
@@ -45,7 +43,8 @@
             infinity: true,
             scaleX: 1,
             scaleY: 1,
-            zoom: 1
+            zoom: 1,
+            elementContainer: 'elementContainer'
         });
 
         // Drawing a rect
